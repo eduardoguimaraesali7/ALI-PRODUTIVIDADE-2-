@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Jornada de Clientes - KANBAN</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  
+  :root {
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --secondary: #ec4899;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --dark: #1f2937;
+    --light: #f9fafb;
+    --border: #e5e7eb;
+    --text: #374151;
+    --text-light: #6b7280;
+  }
+  
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: var(--text);
+  }
+  
+  .container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  /* Header */
+  .header {
+    background: white;
+    border-radius: 16px;
+    padding: 20px 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .logo-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+  }
+  
+  .logo h1 {
+    font-size: 22px;
+    color: var(--dark);
+  }
+  
+  .logo p {
+    font-size: 12px;
+    color: var(--text-light);
+  }
+  
+  .nav-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .tab-btn {
+    padding: 10px 20px;
+    border: 2px solid transparent;
+    background: var(--light);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text);
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .tab-btn:hover {
+    background: #e0e7ff;
+    color: var(--primary);
+  }
+  
+  .tab-btn.active {
+    background: var(--primary);
+    color: white;
+  }
+  
+  /* Dashboard */
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border-left: 4px solid var(--primary);
+    transition: transform 0.3s;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-3px);
+  }
+  
+  .stat-card .label {
+    color: var(--text-light);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+  
+  .stat-card .value {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--dark);
+  }
+  
+  .stat-card.success { border-left-color: var(--success); }
+  .stat-card.warning { border-left-color: var(--warning); }
+  .stat-card.danger { border-left-color: var(--danger); }
+  .stat-card.info { border-left-color: #06b6d4; }
+  
+  /* Views */
+  .view {
+    display: none;
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+  
+  .view.active { display: block; }
+  
+  .view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .view-title {
+    font-size: 24px;
+    color: var(--dark);
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+  
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+  }
+  
+  .btn-success { background: var(--success); color: white; }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-warning { background: var(--warning); color: white; }
+  .btn-secondary { background: #e5e7eb; color: var(--text); }
+  
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  
+  /* KANBAN */
+  .kanban-container {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 15px;
+  }
+  
+  .kanban-column {
+    min-width: 280px;
+    background: var(--light);
+    border-radius: 12px;
+    padding: 15px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .kanban-column-header {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .kanban-column-title {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .kanban-count {
+    background: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  .kanban-cards {
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .kanban-card {
+    background: white;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 4px solid;
+    cursor: grab;
+    transition: all 0.2s;
+  }
+  
+  .kanban-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+  }
+  
+  .kanban-card:active { cursor: grabbing; }
+  
+  .kanban-card.dragging { opacity: 0.5; }
+  
+  .kanban-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 8px;
+  }
+  
+  .kanban-card-name {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 14px;
+  }
+  
+  .kanban-card-company {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-bottom: 8px;
+  }
+  
+  .kanban-card-info {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--text-light);
+  }
+  
+  .kanban-card-tag {
+    background: var(--light);
+    padding: 2px 8px;
+    border-radius: 8px;
+  }
+  
+  .kanban-card-actions {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  
+  .kanban-card-actions button {
+    flex: 1;
+    padding: 5px;
+    border: none;
+    background: var(--light);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+  }
+  
+  .kanban-card-actions button:hover { background: #e0e7ff; }
+  
+  /* Stage colors */
+  .stage-conhecer { border-color: #3b82f6; color: #3b82f6; }
+  .stage-obter { border-color: #6366f1; color: #6366f1; }
+  .stage-nomear { border-color: #8b5cf6; color: #8b5cf6; }
+  .stage-elaborar { border-color: #ec4899; color: #ec4899; }
+  .stage-compartilhar { border-color: #f43f5e; color: #f43f5e; }
+  .stage-transformar1 { border-color: #f97316; color: #f97316; }
+  .stage-transformar2 { border-color: #f59e0b; color: #f59e0b; }
+  .stage-avaliar { border-color: #eab308; color: #eab308; }
+  .stage-reconhecer { border-color: #10b981; color: #10b981; }
+  .stage-desistente { border-color: #ef4444; color: #ef4444; }
+  
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  
+  .modal-overlay.active { display: flex; }
+  
+  .modal {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .modal-title {
+    font-size: 20px;
+    color: var(--dark);
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-light);
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--dark);
+    font-size: 14px;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border 0.2s;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+  
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  
+  /* Calendar */
+  .calendar-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+  
+  .calendar-day-name {
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-light);
+    padding: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  
+  .calendar-day {
+    aspect-ratio: 1;
+    background: var(--light);
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+  }
+  
+  .calendar-day:hover {
+    background: #e0e7ff;
+  }
+  
+  .calendar-day.empty {
+    background: transparent;
+    cursor: default;
+  }
+  
+  .calendar-day.today {
+    background: var(--primary);
+    color: white;
+    font-weight: bold;
+  }
+  
+  .calendar-day.has-event {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid var(--warning);
+  }
+  
+  .calendar-day.has-event::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background: var(--danger);
+    border-radius: 50%;
+  }
+  
+  .stage-calendars {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+  }
+  
+  .stage-calendar-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    border-left: 4px solid;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  
+  .stage-calendar-title {
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .stage-calendar-dates {
+    font-size: 13px;
+    color: var(--text-light);
+  }
+  
+  .stage-calendar-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+  
+  .status-active { background: #d1fae5; color: #065f46; }
+  .status-future { background: #dbeafe; color: #1e40af; }
+  .status-ended { background: #fee2e2; color: #991b1b; }
+  
+  /* Client List */
+  .client-list {
+    display: grid;
+    gap: 10px;
+  }
+  
+  .client-item {
+    background: var(--light);
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid var(--primary);
+  }
+  
+  .client-info h3 { color: var(--dark); margin-bottom: 4px; }
+  .client-info p { color: var(--text-light); font-size: 13px; }
+  
+  .client-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .search-bar input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  
+  .filter-select {
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: white;
+  }
+  
+  /* Events */
+  .event-list {
+    margin-top: 20px;
+  }
+  
+  .event-item {
+    background: var(--light);
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 3px solid var(--primary);
+  }
+  
+  .event-info { flex: 1; }
+  .event-date {
+    color: var(--text-light);
+    font-size: 12px;
+  }
+  .event-title { font-weight: 500; }
+  
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 15px 25px;
+    background: var(--success);
+    color: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    transform: translateX(400px);
+    transition: transform 0.3s;
+    z-index: 2000;
+  }
+  
+  .toast.show { transform: translateX(0); }
+  .toast.error { background: var(--danger); }
+  .toast.warning { background: var(--warning); }
+  
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-light);
+  }
+  
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .form-row { grid-template-columns: 1fr; }
+    .header { flex-direction: column; }
+    .nav-tabs { width: 100%; justify-content: center; }
+    .tab-btn { padding: 8px 12px; font-size: 13px; }
+  }
+  
+  /* Tabs in modal */
+  .modal-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .modal-tab {
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+  
+  .modal-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  
+  .timeline {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+  }
+  
+  .timeline-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 13px;
+  }
+  
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--primary);
+    border-radius: 50%;
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">JC</div>
+      <div>
+        <h1>Jornada do Cliente</h1>
+        <p>Sistema de Gestão e Acompanhamento</p>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-view="dashboard">📊 Dashboard</button>
+      <button class="tab-btn" data-view="kanban">📋 KANBAN</button>
+      <button class="tab-btn" data-view="clients">👥 Clientes</button>
+      <button class="tab-btn" data-view="calendar">📅 Calendário</button>
+      <button class="tab-btn" data-view="stages">🎯 Etapas</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="view active" id="view-dashboard">
+    <div class="view-header">
+      <h2 class="view-title">Dashboard</h2>
+      <button class="btn btn-primary" onclick="openClientModal()">+ Novo Cliente</button>
+    </div>
+    <div class="dashboard" id="dashboard-stats"></div>
+    <div style="background: var(--light); padding: 20px; border-radius: 12px; margin-top: 20px;">
+      <h3 style="margin-bottom: 15px;">📈 Resumo por Etapa</h3>
+      <div id="stage-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;"></div>
+    </div>
+  </div>
+
+  <!-- KANBAN View -->
+  <div class="view" id="view-kanban">
+    <div class="view-header">
+      <h2 class="view-title">📋 KANBAN - Jornada do Cliente</h2>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-secondary" onclick="filterKanban()">🔍 Filtrar</button>
+        <button class="btn btn-primary" onclick="openClientModal()">+ Novo Cliente</button>
+      </div>
+    </div>
+    <div class="kanban-container" id="kanban-board"></div>
+  </div>
+
+  <!-- Clients View -->
+  <div class="view" id="view-clients">
+    <div class="view-header">
+      <h2 class="view-title">👥 Todos os Clientes</h2>
+      <button class="btn btn-primary" onclick="openClientModal()">+ Novo Cliente</button>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="🔍 Buscar por nome, empresa ou email..." oninput="renderClients()">
+      <select class="filter-select" id="filter-stage" onchange="renderClients()">
+        <option value="">Todas as etapas</option>
+        <option value="Conhecer">Conhecer</option>
+        <option value="Obter">Obter</option>
+        <option value="Nomear">Nomear</option>
+        <option value="Elaborar">Elaborar</option>
+        <option value="Compartilhar">Compartilhar</option>
+        <option value="Transformar 1">Transformar 1</option>
+        <option value="Transformar 2">Transformar 2</option>
+        <option value="Avaliar">Avaliar</option>
+        <option value="Reconhecer">Reconhecer</option>
+        <option value="Desistente">Desistente</option>
+      </select>
+    </div>
+    <div class="client-list" id="client-list"></div>
+  </div>
+
+  <!-- Calendar View -->
+  <div class="view" id="view-calendar">
+    <div class="view-header">
+      <h2 class="view-title">📅 Calendário de Atendimentos</h2>
+      <button class="btn btn-primary" onclick="openEventModal()">+ Novo Agendamento</button>
+    </div>
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <button class="btn btn-secondary" onclick="changeMonth(-1)">‹ Anterior</button>
+        <h3 id="calendar-month-year"></h3>
+        <button class="btn btn-secondary" onclick="changeMonth(1)">Próximo ›</button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+    <div class="event-list" id="event-list">
+      <h3 style="margin: 20px 0 10px;">📌 Próximos Agendamentos</h3>
+      <div id="upcoming-events"></div>
+    </div>
+  </div>
+
+  <!-- Stages View -->
+  <div class="view" id="view-stages">
+    <div class="view-header">
+      <h2 class="view-title">🎯 Calendário das Etapas</h2>
+    </div>
+    <div style="background: var(--light); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+      <h3 style="margin-bottom: 10px;">Período da Jornada</h3>
+      <p style="color: var(--text-light);">Acompanhe o período de execução de cada etapa da jornada do cliente.</p>
+    </div>
+    <div class="stage-calendars" id="stage-calendars"></div>
+  </div>
+</div>
+
+<!-- Client Modal -->
+<div class="modal-overlay" id="client-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="client-modal-title">Novo Cliente</h3>
+      <button class="close-btn" onclick="closeClientModal()">×</button>
+    </div>
+    <form id="client-form" onsubmit="saveClient(event)">
+      <input type="hidden" id="client-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nome do Cliente *</label>
+          <input type="text" id="client-name" required>
+        </div>
+        <div class="form-group">
+          <label>Empresa</label>
+          <input type="text" id="client-company">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="client-email">
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="text" id="client-phone">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Segmento</label>
+          <input type="text" id="client-segment" placeholder="Ex: Tecnologia, Varejo...">
+        </div>
+        <div class="form-group">
+          <label>Valor (R$)</label>
+          <input type="number" id="client-value" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Etapa Atual</label>
+        <select id="client-stage">
+          <option value="Conhecer">Conhecer</option>
+          <option value="Obter">Obter</option>
+          <option value="Nomear">Nomear</option>
+          <option value="Elaborar">Elaborar</option>
+          <option value="Compartilhar">Compartilhar</option>
+          <option value="Transformar 1">Transformar 1</option>
+          <option value="Transformar 2">Transformar 2</option>
+          <option value="Avaliar">Avaliar</option>
+          <option value="Reconhecer">Reconhecer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Observações</label>
+        <textarea id="client-notes" rows="3" placeholder="Anotações importantes sobre o cliente..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeClientModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">💾 Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Event Modal -->
+<div class="modal-overlay" id="event-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Novo Agendamento</h3>
+      <button class="close-btn" onclick="closeEventModal()">×</button>
+    </div>
+    <form id="event-form" onsubmit="saveEvent(event)">
+      <div class="form-group">
+        <label>Título do Atendimento *</label>
+        <input type="text" id="event-title" required placeholder="Ex: Reunião de alinhamento">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data *</label>
+          <input type="date" id="event-date" required>
+        </div>
+        <div class="form-group">
+          <label>Hora</label>
+          <input type="time" id="event-time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Cliente</label>
+        <select id="event-client">
+          <option value="">Selecione um cliente (opcional)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Etapa da Jornada</label>
+        <select id="event-stage">
+          <option value="">Geral</option>
+          <option value="Conhecer">Conhecer</option>
+          <option value="Obter">Obter</option>
+          <option value="Nomear">Nomear</option>
+          <option value="Elaborar">Elaborar</option>
+          <option value="Compartilhar">Compartilhar</option>
+          <option value="Transformar 1">Transformar 1</option>
+          <option value="Transformar 2">Transformar 2</option>
+          <option value="Avaliar">Avaliar</option>
+          <option value="Reconhecer">Reconhecer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Descrição</label>
+        <textarea id="event-description" rows="3" placeholder="Detalhes do atendimento..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeEventModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">💾 Agendar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal-overlay" id="details-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="details-title">Detalhes do Cliente</h3>
+      <button class="close-btn" onclick="closeDetailsModal()">×</button>
+    </div>
+    <div id="details-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==========================================
+// DATA & STATE
+// ==========================================
+const STAGES = [
+  { id: 'Conhecer', class: 'stage-conhecer', icon: '🔍' },
+  { id: 'Obter', class: 'stage-obter', icon: '📥' },
+  { id: 'Nomear', class: 'stage-nomear', icon: '🏷️' },
+  { id: 'Elaborar', class: 'stage-elaborar', icon: '📝' },
+  { id: 'Compartilhar', class: 'stage-compartilhar', icon: '🤝' },
+  { id: 'Transformar 1', class: 'stage-transformar1', icon: '🔄' },
+  { id: 'Transformar 2', class: 'stage-transformar2', icon: '⚡' },
+  { id: 'Avaliar', class: 'stage-avaliar', icon: '📊' },
+  { id: 'Reconhecer', class: 'stage-reconhecer', icon: '🏆' }
+];
+
+const STAGE_PERIODS = {
+  'Conhecer': { start: '2024-07-01', end: '2024-08-31' },
+  'Obter': { start: '2024-07-01', end: '2024-08-31' },
+  'Nomear': { start: '2024-07-01', end: '2024-09-20' },
+  'Elaborar': { start: '2024-09-21', end: '2024-10-11' },
+  'Compartilhar': { start: '2024-10-12', end: '2024-10-25' },
+  'Transformar 1': { start: '2024-10-26', end: '2024-12-06' },
+  'Transformar 2': { start: '2024-10-26', end: '2024-12-06' },
+  'Avaliar': { start: '2024-12-07', end: '2024-12-23' },
+  'Reconhecer': { start: '2024-10-07', end: '2024-12-23' }
+};
+
+let clients = JSON.parse(localStorage.getItem('jornada_clients') || '[]');
+let events = JSON.parse(localStorage.getItem('jornada_events') || '[]');
+let currentDate = new Date();
+let calendarDate = new Date();
+
+// ==========================================
+// INITIALIZATION
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  setupTabs();
+  renderDashboard();
+  renderKanban();
+  renderClients();
+  renderCalendar();
+  renderStageCalendars();
+  populateClientSelect();
+  
+  if (clients.length === 0) {
+    // Add sample data on first load
+    addSampleData();
+  }
+});
+
+function addSampleData() {
+  const today = new Date().toISOString().split('T')[0];
+  clients = [
+    {
+      id: generateId(),
+      name: 'Maria Silva',
+      company: 'Tech Solutions',
+      email: 'maria@techsolutions.com',
+      phone: '(11) 99999-1111',
+      segment: 'Tecnologia',
+      value: 15000,
+      stage: 'Conhecer',
+      notes: 'Cliente em fase inicial de descoberta.',
+      createdAt: today,
+      history: [{ stage: 'Conhecer', date: today }]
+    },
+    {
+      id: generateId(),
+      name: 'João Santos',
+      company: 'Varejo Premium',
+      email: 'joao@varejopremium.com',
+      phone: '(11) 99999-2222',
+      segment: 'Varejo',
+      value: 25000,
+      stage: 'Nomear',
+      notes: 'Projeto bem encaminhado.',
+      createdAt: today,
+      history: [{ stage: 'Conhecer', date: today }, { stage: 'Nomear', date: today }]
+    }
+  ];
+  saveClients();
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+// ==========================================
+// TABS NAVIGATION
+// ==========================================
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      btn.classList.add('active');
+      const view = btn.dataset.view;
+      document.getElementById('view-' + view).classList.add('active');
+      
+      if (view === 'dashboard') renderDashboard();
+      if (view === 'kanban') renderKanban();
+      if (view === 'clients') renderClients();
+      if (view === 'calendar') renderCalendar();
+      if (view === 'stages') renderStageCalendars();
+    });
+  });
+}
+
+// ==========================================
+// DASHBOARD
+// ==========================================
+function renderDashboard() {
+  const activeClients = clients.filter(c => c.stage !== 'Desistente').length;
+  const desistentes = clients.filter(c => c.stage === 'Desistente').length;
+  const totalValue = clients.reduce((sum, c) => sum + (parseFloat(c.value) || 0), 0);
+  const upcomingEvents = events.filter(e => new Date(e.date) >= new Date().setHours(0,0,0,0)).length;
+  
+  document.getElementById('dashboard-stats').innerHTML = `
+    <div class="stat-card">
+      <div class="label">Clientes Ativos</div>
+      <div class="value">${activeClients}</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="label">Desistentes</div>
+      <div class="value">${desistentes}</div>
+    </div>
+    <div class="stat-card success">
+      <div class="label">Valor Total</div>
+      <div class="value">R$ ${totalValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="label">Agendamentos</div>
+      <div class="value">${upcomingEvents}</div>
+    </div>
+  `;
+  
+  // Stage summary
+  const summary = STAGES.map(s => {
+    const count = clients.filter(c => c.stage === s.id).length;
+    return `
+      <div style="background: white; padding: 12px; border-radius: 8px; border-left: 3px solid; border-color: inherit;" class="${s.class}">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; font-weight: 500;">${s.icon} ${s.id}</span>
+          <span style="font-size: 18px; font-weight: bold;">${count}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  const desistentesHtml = `
+    <div style="background: white; padding: 12px; border-radius: 8px; border-left: 3px solid #ef4444;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 13px; font-weight: 500; color: #ef4444;">❌ Desistentes</span>
+        <span style="font-size: 18px; font-weight: bold; color: #ef4444;">${desistentes}</span>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('stage-summary').innerHTML = summary + desistentesHtml;
+}
+
+// ==========================================
+// KANBAN
+// ==========================================
+function renderKanban() {
+  const allStages = [...STAGES, { id: 'Desistente', class: 'stage-desistente', icon: '❌' }];
+  const board = document.getElementById('kanban-board');
+  
+  board.innerHTML = allStages.map(stage => {
+    const stageClients = clients.filter(c => c.stage === stage.id);
+    return `
+      <div class="kanban-column" data-stage="${stage.id}">
+        <div class="kanban-column-header ${stage.class}" style="border-color: currentColor;">
+          <span class="kanban-column-title">${stage.icon} ${stage.id}</span>
+          <span class="kanban-count">${stageClients.length}</span>
+        </div>
+        <div class="kanban-cards" data-stage="${stage.id}" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+          ${stageClients.map(c => renderKanbanCard(c)).join('')}
+          ${stageClients.length === 0 ? '<div style="text-align: center; color: #9ca3af; padding: 20px; font-size: 13px;">Arraste clientes aqui</div>' : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderKanbanCard(client) {
+  const stageInfo = STAGES.find(s => s.id === client.stage) || { class: 'stage-desistente', icon: '❌' };
+  return `
+    <div class="kanban-card ${stageInfo.class}" draggable="true" ondragstart="drag(event)" data-id="${client.id}" ondblclick="viewClient('${client.id}')">
+      <div class="kanban-card-header">
+        <div>
+          <div class="kanban-card-name">${escapeHtml(client.name)}</div>
+          ${client.company ? `<div class="kanban-card-company">${escapeHtml(client.company)}</div>` : ''}
+        </div>
+      </div>
+      <div class="kanban-card-info">
+        ${client.value ? `<span class="kanban-card-tag">💰 R$ ${parseFloat(client.value).toLocaleString('pt-BR')}</span>` : ''}
+        ${client.segment ? `<span class="kanban-card-tag">🏷️ ${escapeHtml(client.segment)}</span>` : ''}
+      </div>
+      <div class="kanban-card-actions">
+        <button onclick="event.stopPropagation(); viewClient('${client.id}')" title="Ver detalhes">👁️</button>
+        <button onclick="event.stopPropagation(); moveClient('${client.id}', 1)" title="Avançar etapa">→</button>
+        <button onclick="event.stopPropagation(); openClientModal('${client.id}')" title="Editar">✏️</button>
+        <button onclick="event.stopPropagation(); markAsDesistente('${client.id}')" title="Marcar como desistente" style="color: var(--danger);">❌</button>
+        <button onclick="event.stopPropagation(); deleteClient('${client.id}')" title="Excluir">🗑️</button>
+      </div>
+    </div>
+  `;
+}
+
+// Drag and drop
+let draggedClientId = null;
+
+function drag(event) {
+  draggedClientId = event.target.dataset.id;
+  event.target.classList.add('dragging');
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', draggedClientId);
+}
+
+function allowDrop(event) {
+  event.preventDefault();
+  event.currentTarget.style.background = '#e0e7ff';
+}
+
+function dragLeave(event) {
+  event.currentTarget.style.background = '';
+}
+
+function drop(event) {
+  event.preventDefault();
+  event.currentTarget.style.background = '';
+  const targetStage = event.currentTarget.dataset.stage;
+  const clientId = event.dataTransfer.getData('text/plain') || draggedClientId;
+  
+  if (clientId && targetStage) {
+    const client = clients.find(c => c.id === clientId);
+    if (client && client.stage !== targetStage) {
+      client.stage = targetStage;
+      client.history = client.history || [];
+      client.history.push({ stage: targetStage, date: new Date().toISOString() });
+      saveClients();
+      renderKanban();
+      renderDashboard();
+      showToast(`Cliente movido para ${targetStage}!`, 'success');
+    }
+  }
+  
+  document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+  draggedClientId = null;
+}
+
+function moveClient(clientId, direction) {
+  const client = clients.find(c => c.id === clientId);
+  if (!client) return;
+  
+  let stagesList = [...STAGES.map(s => s.id)];
+  const currentIndex = stagesList.indexOf(client.stage);
+  
+  if (currentIndex === -1) {
+    // Se for desistente, move para a primeira etapa
+    client.stage = stagesList[0];
+  } else {
+    const newIndex = currentIndex + direction;
+    if (newIndex >= 0 && newIndex < stagesList.length) {
+      client.stage = stagesList[newIndex];
+    } else {
+      showToast('Cliente já está na última etapa!', 'warning');
+      return;
+    }
+  }
+  
+  client.history = client.history || [];
+  client.history.push({ stage: client.stage, date: new Date().toISOString() });
+  saveClients();
+  renderKanban();
+  renderDashboard();
+  showToast(`Cliente movido para ${client.stage}!`, 'success');
+}
+
+function markAsDesistente(clientId) {
+  const client = clients.find(c => c.id === clientId);
+  if (!client) return;
+  
+  if (confirm(`Marcar "${client.name}" como desistente?`)) {
+    client.stage = 'Desistente';
+    client.desistedAt = new Date().toISOString();
+    client.history = client.history || [];
+    client.history.push({ stage: 'Desistente', date: new Date().toISOString() });
+    saveClients();
+    renderKanban();
+    renderDashboard();
+    showToast('Cliente marcado como desistente', 'warning');
+  }
+}
+
+function filterKanban() {
+  const search = prompt('Buscar por nome, empresa ou email:');
+  if (!search) {
+    renderKanban();
+    return;
+  }
+  
+  const filtered = clients.filter(c => 
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    (c.company && c.company.toLowerCase().includes(search.toLowerCase())) ||
+    (c.email && c.email.toLowerCase().includes(search.toLowerCase()))
+  );
+  
+  const board = document.getElementById('kanban-board');
+  board.innerHTML = `
+    <div class="kanban-column" style="min-width: 100%;">
+      <div class="kanban-column-header" style="border-color: var(--primary);">
+        <span class="kanban-column-title">🔍 Resultados para "${escapeHtml(search)}"</span>
+        <span class="kanban-count">${filtered.length}</span>
+        <button class="btn btn-sm btn-secondary" onclick="renderKanban()">Voltar</button>
+      </div>
+      <div class="kanban-cards">
+        ${filtered.map(c => renderKanbanCard(c)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ==========================================
+// CLIENTS LIST
+// ==========================================
+function renderClients() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const stageFilter = document.getElementById('filter-stage').value;
+  
+  let filtered = clients.filter(c => {
+    const matchSearch = !search || 
+      c.name.toLowerCase().includes(search) ||
+      (c.company && c.company.toLowerCase().includes(search)) ||
+      (c.email && c.email.toLowerCase().includes(search));
+    const matchStage = !stageFilter || c.stage === stageFilter;
+    return matchSearch && matchStage;
+  });
+  
+  const list = document.getElementById('client-list');
+  
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h3>Nenhum cliente encontrado</h3>
+        <p>Cadastre um novo cliente para começar.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  list.innerHTML = filtered.map(c => {
+    const stageInfo = STAGES.find(s => s.id === c.stage) || { class: 'stage-desistente' };
+    return `
+      <div class="client-item ${stageInfo.class}">
+        <div class="client-info">
+          <h3>${escapeHtml(c.name)}</h3>
+          <p>${escapeHtml(c.company || '')} ${c.email ? '• ' + escapeHtml(c.email) : ''} ${c.phone ? '• ' + escapeHtml(c.phone) : ''}</p>
+          <p>
+            <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px;">${c.stage}</span>
+            ${c.value ? `<span style="margin-left: 8px; color: var(--success); font-weight: 500;">R$ ${parseFloat(c.value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>` : ''}
+          </p>
+        </div>
+        <div class="client-actions">
+          <button class="btn btn-sm btn-secondary" onclick="viewClient('${c.id}')">👁️ Ver</button>
+          <button class="btn btn-sm btn-primary" onclick="openClientModal('${c.id}')">✏️ Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteClient('${c.id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==========================================
+// CALENDAR
+// ==========================================
+function renderCalendar() {
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  
+  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  
+  document.getElementById('calendar-month-year').textContent = `${monthNames[month]} ${year}`;
+  
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  
+  let html = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    .map(d => `<div class="calendar-day-name">${d}</div>`).join('');
+  
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) {
+    html += '<div class="calendar-day empty"></div>';
+  }
+  
+  // Days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+    const hasEvent = events.some(e => e.date === dateStr);
+    
+    html += `
+      <div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}" 
+           onclick="openEventModal('${dateStr}')" title="Clique para agendar">
+        <strong>${day}</strong>
+        ${hasEvent ? `<div style="font-size: 10px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(events.find(e => e.date === dateStr).title)}</div>` : ''}
+      </div>
+    `;
+  }
+  
+  document.getElementById('calendar-grid').innerHTML = html;
+  renderUpcomingEvents();
+}
+
+function changeMonth(direction) {
+  calendarDate.setMonth(calendarDate.getMonth() + direction);
+  renderCalendar();
+}
+
+function renderUpcomingEvents() {
+  const now = new Date().setHours(0,0,0,0);
+  const upcoming = events
+    .filter(e => new Date(e.date) >= now)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 10);
+  
+  const container = document.getElementById('upcoming-events');
+  
+  if (upcoming.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 20px;">Nenhum agendamento próximo.</p>';
+    return;
+  }
+  
+  container.innerHTML = upcoming.map(e => {
+    const client = clients.find(c => c.id === e.clientId);
+    const date = new Date(e.date + 'T' + (e.time || '00:00'));
+    return `
+      <div class="event-item">
+        <div class="event-info">
+          <div class="event-title">${escapeHtml(e.title)}</div>
+          <div class="event-date">
+            📅 ${date.toLocaleDateString('pt-BR')} ${e.time ? 'às ' + e.time : ''}
+            ${client ? ' • 👤 ' + escapeHtml(client.name) : ''}
+            ${e.stage ? ' • 🎯 ' + e.stage : ''}
+          </div>
+          ${e.description ? '<div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">' + escapeHtml(e.description) + '</div>' : ''}
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="deleteEvent('${e.id}')">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==========================================
+// STAGE CALENDARS
+// ==========================================
+function renderStageCalendars() {
+  const today = new Date();
+  const container = document.getElementById('stage-calendars');
+  
+  const html = STAGES.map(stage => {
+    const period = STAGE_PERIODS[stage.id];
+    const start = new Date(period.start);
+    const end = new Date(period.end);
+    
+    let status, statusText;
+    if (today < start) {
+      status = 'status-future';
+      statusText = '📅 Próxima';
+    } else if (today >= start && today <= end) {
+      status = 'status-active';
+      statusText = '🟢 Em andamento';
+    } else {
+      status = 'status-ended';
+      statusText = '✓ Encerrada';
+    }
+    
+    const daysTotal = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const daysElapsed = Math.max(0, Math.ceil((today - start) / (1000 * 60 * 60 * 24)));
+    const progress = Math.min(100, Math.max(0, (daysElapsed / daysTotal) * 100));
+    
+    return `
+      <div class="stage-calendar-card ${stage.class}">
+        <div class="stage-calendar-title">${stage.icon} ${stage.id}</div>
+        <div class="stage-calendar-dates">
+          📅 ${start.toLocaleDateString('pt-BR')} → ${end.toLocaleDateString('pt-BR')}
+        </div>
+        <div style="margin-top: 8px; font-size: 12px; color: var(--text-light);">
+          ${daysTotal} dias no total
+        </div>
+        <div style="background: var(--border); height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden;">
+          <div style="background: currentColor; height: 100%; width: ${progress}%; transition: width 0.3s;"></div>
+        </div>
+        <span class="stage-calendar-status ${status}">${statusText}</span>
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = html;
+}
+
+// ==========================================
+// CLIENT MODAL
+// ==========================================
+function openClientModal(clientId = null) {
+  document.getElementById('client-modal').classList.add('active');
+  document.getElementById('client-modal-title').textContent = clientId ? 'Editar Cliente' : 'Novo Cliente';
+  
+  if (clientId) {
+    const client = clients.find(c => c.id === clientId);
+    if (client) {
+      document.getElementById('client-id').value = client.id;
+      document.getElementById('client-name').value = client.name;
+      document.getElementById('client-company').value = client.company || '';
+      document.getElementById('client-email').value = client.email || '';
+      document.getElementById('client-phone').value = client.phone || '';
+      document.getElementById('client-segment').value = client.segment || '';
+      document.getElementById('client-value').value = client.value || '';
+      document.getElementById('client-stage').value = client.stage;
+      document.getElementById('client-notes').value = client.notes || '';
+    }
+  } else {
+    document.getElementById('client-form').reset();
+    document.getElementById('client-id').value = '';
+    document.getElementById('client-stage').value = 'Conhecer';
+  }
+}
+
+function closeClientModal() {
+  document.getElementById('client-modal').classList.remove('active');
+}
+
+function saveClient(event) {
+  event.preventDefault();
+  
+  const id = document.getElementById('client-id').value;
+  const clientData = {
+    name: document.getElementById('client-name').value.trim(),
+    company: document.getElementById('client-company').value.trim(),
+    email: document.getElementById('client-email').value.trim(),
+    phone: document.getElementById('client-phone').value.trim(),
+    segment: document.getElementById('client-segment').value.trim(),
+    value: parseFloat(document.getElementById('client-value').value) || 0,
+    stage: document.getElementById('client-stage').value,
+    notes: document.getElementById('client-notes').value.trim()
+  };
+  
+  if (id) {
+    // Edit
+    const client = clients.find(c => c.id === id);
+    if (client) {
+      const oldStage = client.stage;
+      Object.assign(client, clientData);
+      if (oldStage !== client.stage) {
+        client.history = client.history || [];
+        client.history.push({ stage: client.stage, date: new Date().toISOString() });
+      }
+    }
+    showToast('Cliente atualizado com sucesso!', 'success');
+  } else {
+    // Create
+    const newClient = {
+      id: generateId(),
+      ...clientData,
+      createdAt: new Date().toISOString(),
+      history: [{ stage: clientData.stage, date: new Date().toISOString() }]
+    };
+    clients.push(newClient);
+    showToast('Cliente cadastrado com sucesso!', 'success');
+  }
+  
+  saveClients();
+  closeClientModal();
+  renderAll();
+}
+
+function deleteClient(clientId) {
+  const client = clients.find(c => c.id === clientId);
+  if (!client) return;
+  
+  if (confirm(`Tem certeza que deseja excluir "${client.name}"? Esta ação não pode ser desfeita.`)) {
+    clients = clients.filter(c => c.id !== clientId);
+    saveClients();
+    renderAll();
+    showToast('Cliente excluído!', 'success');
+  }
+}
+
+function viewClient(clientId) {
+  const client = clients.find(c => c.id === clientId);
+  if (!client) return;
+  
+  const stageInfo = STAGES.find(s => s.id === client.stage) || { class: 'stage-desistente', icon: '❌' };
+  const history = (client.history || []).slice().reverse();
+  
+  document.getElementById('details-title').innerHTML = `<span class="${stageInfo.class}">${stageInfo.icon} ${escapeHtml(client.name)}</span>`;
+  
+  document.getElementById('details-content').innerHTML = `
+    <div style="display: grid; gap: 10px;">
+      <div><strong>Empresa:</strong> ${escapeHtml(client.company || '-')}</div>
+      <div><strong>Email:</strong> ${escapeHtml(client.email || '-')}</div>
+      <div><strong>Telefone:</strong> ${escapeHtml(client.phone || '-')}</div>
+      <div><strong>Segmento:</strong> ${escapeHtml(client.segment || '-')}</div>
+      <div><strong>Valor:</strong> R$ ${parseFloat(client.value || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+      <div><strong>Etapa Atual:</strong> <span class="${stageInfo.class}" style="padding: 4px 10px; border-radius: 4px; font-weight: 500;">${client.stage}</span></div>
+      <div><strong>Cadastrado em:</strong> ${new Date(client.createdAt).toLocaleDateString('pt-BR')}</div>
+      ${client.notes ? `<div style="background: var(--light); padding: 10px; border-radius: 8px;"><strong>Observações:</strong><br>${escapeHtml(client.notes)}</div>` : ''}
+    </div>
+    
+    <div class="timeline">
+      <h4 style="margin-bottom: 10px;">📜 Histórico de Etapas</h4>
+      ${history.length > 0 ? history.map((h, i) => {
+        const sInfo = STAGES.find(s => s.id === h.stage) || { class: 'stage-desistente' };
+        return `
+          <div class="timeline-item">
+            <div class="timeline-dot ${sInfo.class}"></div>
+            <div>
+              <strong>${h.stage}</strong>
+              <div style="font-size: 12px; color: var(--text-light);">${new Date(h.date).toLocaleString('pt-BR')}</div>
+            </div>
+          </div>
+        `;
+      }).join('') : '<p style="color: var(--text-light); font-size: 13px;">Nenhum histórico registrado.</p>'}
+    </div>
+    
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeDetailsModal()">Fechar</button>
+      <button class="btn btn-warning" onclick="closeDetailsModal(); markAsDesistente('${client.id}');">❌ Marcar como Desistente</button>
+      <button class="btn btn-primary" onclick="closeDetailsModal(); openClientModal('${client.id}');">✏️ Editar</button>
+    </div>
+  `;
+  
+  document.getElementById('details-modal').classList.add('active');
+}
+
+function closeDetailsModal() {
+  document.getElementById('details-modal').classList.remove('active');
+}
+
+// ==========================================
+// EVENT MODAL
+// ==========================================
+function openEventModal(dateStr = null) {
+  document.getElementById('event-modal').classList.add('active');
+  document.getElementById('event-form').reset();
+  
+  if (dateStr) {
+    document.getElementById('event-date').value = dateStr;
+  } else {
+    document.getElementById('event-date').value = new Date().toISOString().split('T')[0];
+  }
+  
+  populateClientSelect();
+}
+
+function closeEventModal() {
+  document.getElementById('event-modal').classList.remove('active');
+}
+
+function populateClientSelect() {
+  const select = document.getElementById('event-client');
+  const currentValue = select.value;
+  select.innerHTML = '<option value="">Selecione um cliente (opcional)</option>' +
+    clients.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.company ? ' - ' + escapeHtml(c.company) : ''}</option>`).join('');
+  select.value = currentValue;
+}
+
+function saveEvent(event) {
+  event.preventDefault();
+  
+  const newEvent = {
+    id: generateId(),
+    title: document.getElementById('event-title').value.trim(),
+    date: document.getElementById('event-date').value,
+    time: document.getElementById('event-time').value,
+    clientId: document.getElementById('event-client').value,
+    stage: document.getElementById('event-stage').value,
+    description: document.getElementById('event-description').value.trim(),
+    createdAt: new Date().toISOString()
+  };
+  
+  events.push(newEvent);
+  saveEvents();
+  closeEventModal();
+  renderCalendar();
+  renderDashboard();
+  showToast('Agendamento criado com sucesso!', 'success');
+}
+
+function deleteEvent(eventId) {
+  if (confirm('Excluir este agendamento?')) {
+    events = events.filter(e => e.id !== eventId);
+    saveEvents();
+    renderCalendar();
+    renderDashboard();
+    showToast('Agendamento excluído!', 'success');
+  }
+}
+
+// ==========================================
+// UTILITIES
+// ==========================================
+function saveClients() {
+  localStorage.setItem('jornada_clients', JSON.stringify(clients));
+}
+
+function saveEvents() {
+  localStorage.setItem('jornada_events', JSON.stringify(events));
+}
+
+function renderAll() {
+  renderDashboard();
+  renderKanban();
+  renderClients();
+  renderStageCalendars();
+  populateClientSelect();
+}
+
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast show' + (type !== 'success' ? ' ' + type : '');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function escapeHtml(text) {
+  if (text == null) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Close modals on outside click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove('active');
+    }
+  });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+  }
+});
+</script>
+</body>
+</html>
